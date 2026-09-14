@@ -2,23 +2,6 @@
 
 A browser-based lookup tool for ingredient, generic, and brand names. It retrieves package NDCs from openFDA and exports an Excel workbook.
 
-## Publish on GitHub Pages
-
-1. Sign in to GitHub and [create a repository](https://github.com/new). A suggested name is `ndc-lookup`. Choose **Public**. Adding an initial README is optional; this package includes one.
-2. Extract `ndc-lookup-github-pages.zip` on your computer.
-3. In the repository, choose **Add file → Upload files**. If the repository is empty, use **uploading an existing file** on its initial page.
-4. Upload the extracted files themselves into the repository's top level. Do not upload the ZIP or its enclosing folder. You should see `index.html`, `styles.css`, `app.js`, `engine.js`, `export.js`, `README.md`, and `.nojekyll` at the top level. The `.nojekyll` file tells Pages to publish the files without Jekyll processing.
-5. Save the upload to the `main` branch using **Commit changes**. If your account requires a pull request, merge it into `main` before the next step.
-6. Open **Settings → Pages**. Under **Build and deployment**, set **Source** to **Deploy from a branch**. Select **main** and **/(root)**, then select **Save**.
-7. Wait for deployment to finish. Check the **Actions** tab if you need its status. Return to **Settings → Pages** and open the published website link shown there.
-8. In the published site, select **Load 3 examples**, then **Find NDCs**. Once the batch completes, select **Export Excel** and confirm the workbook downloads. Share the published website link with colleagues.
-
-The expected address pattern is `https://YOUR-USERNAME.github.io/ndc-lookup/` if you use the suggested repository name. This is an example pattern, not a currently published URL. Use the exact address GitHub displays after successful deployment.
-
-GitHub Pages supports public repositories on GitHub Free. The website uses relative asset paths and HTTPS requests to openFDA, so it can run under a GitHub Pages project address. Visitors use the public website; they do not need to install Node.js or download this repository.
-
-If your organization blocks the published domain, request approval from its IT team. If the page opens but lookups fail, check access to `https://api.fda.gov` as well as the error shown in the app. The local address `127.0.0.1:4174` is not the published address.
-
 ## How to use the tool
 
 1. Choose **Any drug name**, **Generic name**, **Ingredient name**, or **Brand name**.
