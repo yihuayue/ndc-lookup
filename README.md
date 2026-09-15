@@ -9,8 +9,6 @@ A browser-based lookup tool for ingredient, generic, and brand names. It retriev
 3. Select **Find NDCs** and wait for completion.
 4. Select **Export Excel** to download the workbook.
 
-The three optional examples can be replaced with your own list. There are no fixed CYP or AED lists in this tool. The maximum batch size is 200 unique input names.
-
 ## Mapping workflow
 
 ```mermaid
@@ -47,15 +45,8 @@ The app keeps all API-returned products, including combinations, salt forms, and
 - NDC assignment and directory inclusion do not establish FDA approval.
 - Drug-name queries are sent directly to openFDA. The application holds returned results in the browser and generates the workbook there.
 
-## Files and updates
-
-The five application files are `index.html`, `styles.css`, `app.js`, `engine.js`, and `export.js`. There is no installation or build step for GitHub Pages. To update the website, replace these files in the configured publishing branch; GitHub Pages deploys changes from that branch.
-
 ## Documentation
 
-- [GitHub Pages publishing settings](https://docs.github.com/en/pages/getting-started-with-github-pages/configuring-a-publishing-source-for-your-github-pages-site)
-- [Upload files to a GitHub repository](https://docs.github.com/en/repositories/working-with-files/managing-files/adding-a-file-to-a-repository)
-- [About GitHub Pages](https://docs.github.com/en/pages/getting-started-with-github-pages/what-is-github-pages)
 - [openFDA NDC searchable fields](https://open.fda.gov/apis/drug/ndc/searchable-fields/)
 - [openFDA query parameters](https://open.fda.gov/apis/query-parameters/)
 - [FDA NDC Directory](https://www.fda.gov/drugs/drug-approvals-and-databases/national-drug-code-directory)
