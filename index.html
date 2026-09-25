@@ -1,8 +1,78 @@
 <!doctype html>
-<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Drug name → NDC | Medication mapping</title><meta name="description" content="Map ingredient, generic and brand names to package NDCs through openFDA, and export a documented Excel workbook."><link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'%3E%3Crect width='40' height='40' rx='10' fill='%23144549'/%3E%3Cpath d='M9 20h20m-7-7 7 7-7 7' stroke='%23fff' stroke-width='3' fill='none'/%3E%3C/svg%3E"><link rel="stylesheet" href="styles.css"></head>
-<body><header><a class="brand" href="./"><span class="brand-icon">↗</span>Medication mapping <span class="divider">/</span> <span class="brand-sub">Drug name to NDC</span></a><a href="#method">How it works ↗</a></header>
-<main><div class="intro"><p class="eyebrow">NAME-BASED DRUG LOOKUP</p><h1>Find NDCs by drug name.</h1><p>Enter drug names. Get package NDCs from openFDA. Export Excel.</p></div>
-<div class="workspace"><section class="panel input-panel" aria-labelledby="input-title"><div class="section-head"><h2 id="input-title">Your drug list</h2><span id="input-count" class="badge">0 drugs</span></div><label for="input-type">Input type</label><select id="input-type" aria-describedby="input-type-hint"><option value="mixed">Any drug name</option><option value="generic">Generic name</option><option value="ingredient">Ingredient name</option><option value="brand">Brand name</option></select><p class="hint" id="input-type-hint"></p><label for="names">Drug names</label><p class="hint" id="name-hint">Enter one drug name per line.</p><textarea id="names" rows="7" aria-describedby="name-hint" placeholder="repaglinide&#10;pioglitazone&#10;bupropion" spellcheck="false"></textarea><div class="presets"><button type="button" id="load-examples">Load 3 examples</button></div><p class="hint" id="example-hint">Examples only: repaglinide, pioglitazone and bupropion. Enter your own names from any drug group.</p>
-<div class="source-note"><strong>Data source: openFDA</strong><p>Searches currently available FDA directory records. Historical NDC reconstruction is not included.</p></div><div class="actions"><button class="primary" id="run" disabled>Find NDCs <span>→</span></button><button id="stop" hidden>Stop</button></div><p id="status" role="status" aria-live="polite">Ready for your drug list.</p><progress id="progress" value="0" max="1" hidden></progress></section>
-<section class="results" aria-labelledby="results-title"><div class="section-head"><div><p class="eyebrow">BATCH RESULTS</p><h2 id="results-title">Results & export</h2></div><button id="export" disabled>↓ Export Excel</button></div><div class="metrics"><div><span id="m-drugs">0</span><small>Drugs processed</small></div><div><span id="m-ndcs">0</span><small>Unique NDCs</small></div></div><div id="empty" class="empty"><div class="empty-icon">⇄</div><h3>Your mapping starts here</h3><div class="empty-steps"><span>1 · Enter names</span><span>2 · Find NDCs</span><span>3 · Export workbook</span></div></div><p id="stale-notice" class="notice" hidden>These results belong to the previous batch. Find NDCs again for your edited names or input type before exporting.</p><div id="results-table" hidden></div><div id="detail" hidden></div></section></div>
-<section id="method" class="method"><p class="eyebrow">THE MAPPING LOGIC</p><h2>Drug names → openFDA → NDCs</h2><div class="flow"><div class="flow-input">Ingredient, generic or brand name</div><div class="flow-steps"><article><span class="route-label">01 · SEARCH</span><h3>Choose the name field</h3><p>Search the active ingredient, generic name or brand name in openFDA. Any drug name searches all three.</p></article><article><span class="route-label">02 · COLLECT</span><h3>Collect the API results</h3><p>Keep package NDCs from every returned product, including salt forms, combinations and brand variants.</p></article><article><span class="route-label">03 · EXPORT</span><h3>Export your NDC list</h3><p>Remove duplicate codes per drug. Keep the FDA code and an 11-digit version in one mapping table.</p></article></div><div class="flow-output">One NDC mapping table · FDA source fields included · No manual approval step</div></div><p class="method-note">This tool uses the current FDA directory. It does not reconstruct historical NDC lists. Directory inclusion and NDC assignment do not establish FDA approval.</p><details><summary>API search details &amp; source documentation</summary><div id="method-details"></div></details></section></main><footer><span>Drug name to NDC · Current FDA directory</span><span>Queries go to FDA · Results stay in your browser</span></footer><script type="module" src="app.js"></script></body></html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Convert drug names to NDC | Medication mapping</title>
+<meta name="description" content="Find current and historical NDCs by drug name and export the results in one Excel workbook.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'%3E%3Crect width='40' height='40' rx='10' fill='%23144549'/%3E%3Cpath d='M9 20h20m-7-7 7 7-7 7' stroke='%23fff' stroke-width='3' fill='none'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body id="top">
+<header><a class="brand" href="#top"><span class="brand-icon" aria-hidden="true">↗</span>Medication mapping <span class="divider" aria-hidden="true">/</span><span class="brand-sub">Drug name to NDC</span></a><a href="#workflow">How it works ↗</a></header>
+<main>
+ <div class="intro"><p class="eyebrow">DRUG NAME LOOKUP</p><h1>Convert drug names to NDC</h1><p>Find current and historical NDCs from RxNorm using a generic name, brand name, or ingredient.</p></div>
+ <div class="workspace">
+  <section class="panel input-panel" aria-labelledby="input-title">
+   <div class="section-head"><h2 id="input-title">Your drug lookup</h2></div>
+   <form id="lookup-form">
+    <div class="field"><label for="names">Drug names</label><textarea id="names" name="names" rows="4" placeholder="pirtobrutinib&#10;abemaciclib&#10;selpercatinib" autocomplete="off" spellcheck="false" aria-describedby="name-help"></textarea><p class="hint" id="name-help">Enter generic names, brand names, ingredient names, or mix them in one search.<br>One name per line.</p></div>
+    <div class="field coverage-field"><label for="coverage">NDC coverage</label><select id="coverage" aria-describedby="coverage-help"><option value="history" selected>Current + historical</option><option value="current">Current only</option></select><p class="hint" id="coverage-help"><strong>Current:</strong> codes currently linked to the matched products in RxNorm.<br><strong>Historical:</strong> adds codes from earlier RxNorm mappings; dates reflect database records, not time on the market.</p><label class="checkbox-label" for="include-combinations"><input id="include-combinations" type="checkbox" checked aria-describedby="combination-help">Include combination products</label><p class="hint" id="combination-help">For single-ingredient searches. Uncheck to exclude products or packs with additional active ingredients.</p></div>
+    <div class="actions"><button class="primary" id="lookup" type="submit">Find NDCs <span aria-hidden="true">↗</span></button><button id="cancel" type="button" hidden>Stop</button></div>
+   </form>
+   <p id="message" role="status" aria-live="polite" hidden></p>
+   <div id="progress-box" hidden><div class="progress-label"><span id="progress-text"></span><span id="progress-count"></span></div><progress id="progress" max="100" value="0"></progress></div>
+  </section>
+  <section class="results-panel" aria-labelledby="results-heading">
+   <div class="section-head"><div><p class="eyebrow">MAPPING RESULTS</p><h2 id="results-heading">Results &amp; export</h2></div><div class="exports"><button id="export-excel" class="secondary" type="button" disabled>Export Excel workbook ↗</button></div></div>
+   <div class="metrics"><div><strong id="drug-count">0</strong><span>Drug names</span></div><div><strong id="current-count">0</strong><span>Current NDCs</span></div><div><strong id="ndc-count">0</strong><span>Total NDCs</span></div></div>
+   <div id="empty" class="empty"><div class="empty-icon" aria-hidden="true">⇄</div><h3>Your mapping starts here</h3><div class="empty-steps"><span>1 · Enter names</span><span>2 · Find NDCs</span><span>3 · Export workbook</span></div></div>
+   <div id="results" hidden>
+    <div class="run-heading"><p class="eyebrow" id="run-status"></p><h3 id="result-title">Drug name lookup</h3><p id="result-meta" class="subtle"></p></div>
+    <div class="table-controls"><div class="tabs" role="tablist" aria-label="Results view"><button role="tab" id="tab-drugs" aria-selected="true" aria-controls="drugs-panel">Drug summary</button><button role="tab" id="tab-ndcs" aria-selected="false" aria-controls="ndcs-panel" tabindex="-1">NDC mapping</button></div><input id="filter" type="search" aria-label="Filter results" placeholder="Filter results…"></div>
+    <div id="drugs-panel" role="tabpanel" aria-labelledby="tab-drugs"><div class="table-wrap"><table><thead><tr><th>Input drug</th><th>Matched drug</th><th>NDCs</th><th>Lookup status</th></tr></thead><tbody id="drugs-body"></tbody></table></div></div>
+    <div id="ndcs-panel" role="tabpanel" aria-labelledby="tab-ndcs" hidden><p class="table-note">Exports include all results, regardless of filters.</p><div class="table-wrap"><table><thead><tr><th>NDC11</th><th>Input drug</th><th>Product name</th><th>Coverage</th></tr></thead><tbody id="ndcs-body"></tbody></table></div><div class="pagination"><span id="page-label"></span><div><button id="prev" type="button">Previous</button><button id="next" type="button">Next</button></div></div></div>
+   </div>
+  </section>
+ </div>
+ <section id="workflow" class="method" aria-labelledby="workflow-title">
+  <p class="eyebrow">HOW IT WORKS</p><h2 id="workflow-title">From drug names to NDCs</h2>
+  <div class="flow"><div class="flow-input">One drug name, or a list of names</div><ol class="flow-steps">
+   <li><span class="route-label">01 · ENTER</span><h3>Add drug names</h3><p>Enter an ingredient, generic name or brand. Use one name per line for a batch.</p></li>
+   <li><span class="route-label">02 · CHOOSE</span><h3>Select coverage</h3><p>Look up current codes, or include codes from earlier drug mappings.</p></li>
+   <li><span class="route-label">03 · REVIEW</span><h3>Check your results</h3><p>Review product names and unique 11-digit NDCs. Duplicate codes are combined.</p></li>
+   <li><span class="route-label">04 · EXPORT</span><h3>Download one workbook</h3><p>Three sheets: Drug summary, NDC mapping with API links, and Methods.</p></li>
+  </ol><div class="flow-output">One workbook · NDCs preserved as text</div></div>
+  <details class="coverage"><summary>Data sources &amp; notes</summary><div id="method-details" class="notes-grid">
+   <section class="note-section note-wide" aria-labelledby="notes-coverage"><h3 id="notes-coverage">Sources &amp; coverage</h3>
+    <p>The tool uses <a href="https://lhncbc.nlm.nih.gov/RxNav/" target="_blank" rel="noopener noreferrer">RxNorm</a>, maintained by the National Library of Medicine, for drug names, related products and NDC associations. Duplicate NDCs are counted once.</p>
+    <table class="notes-table"><thead><tr><th>Option</th><th>Selection</th><th>What is included</th></tr></thead><tbody>
+     <tr><td rowspan="2">NDC coverage</td><td>Current only</td><td>Codes currently linked to the retrieved products in RxNorm.</td></tr>
+     <tr><td>Current + historical (default)</td><td>Current codes plus earlier RxNorm NDC associations for the retrieved products.</td></tr>
+     <tr><td rowspan="2">Include combination products</td><td>Checked (default)</td><td>All related products, including products or packs with additional active ingredients.</td></tr>
+     <tr><td>Unchecked</td><td>Only products or packs with one distinct base ingredient. Products with unconfirmed ingredients are withheld and flagged as incomplete.</td></tr>
+    </tbody></table>
+    <p>The combination-product option applies to single-ingredient searches in either coverage mode. Brand names, explicit combination names and specific products retain their matched scope.</p>
+    <p>Using the same NDC source as the ATC tool keeps product mappings and historical-association definitions consistent. No study-date filter is applied. Current associations do not establish current marketing availability, and historical results may be incomplete.</p>
+   </section>
+   <section class="note-section note-wide" aria-labelledby="notes-rxnorm"><h3 id="notes-rxnorm">RxNorm API · National Library of Medicine</h3>
+    <p class="api-address">Base URL: <code>https://rxnav.nlm.nih.gov/REST</code></p>
+    <dl class="api-steps">
+     <dt><a href="https://lhncbc.nlm.nih.gov/RxNav/APIs/api-RxNorm.findRxcuiByString.html" target="_blank" rel="noopener noreferrer">Match the drug name</a></dt>
+     <dd><code>/rxcui.json</code> searches active RxNorm concepts (<code>allsrc=0</code>): exact name or synonym first (<code>search=0</code>), then normalized matching (<code>search=1</code>) if no match is found. No fuzzy matching is used. The returned RxCUI is RxNorm’s drug identifier.</dd>
+     <dt><a href="https://lhncbc.nlm.nih.gov/RxNav/APIs/api-RxNorm.getRelatedByType.html" target="_blank" rel="noopener noreferrer">Find related products</a></dt>
+     <dd><code>/rxcui/{id}/related.json</code> retrieves generic and branded drug products and packs (<code>SCD, SBD, GPCK, BPCK</code>) for an ingredient or brand. A specific product input is searched directly.</dd>
+     <dt><a href="https://lhncbc.nlm.nih.gov/RxNav/APIs/api-RxNorm.getRelatedByType.html" target="_blank" rel="noopener noreferrer">Filter combination products (optional)</a></dt>
+     <dd>When unchecked, searches matching one ingredient (<code>IN</code> or <code>PIN</code>) keep only products with one distinct base ingredient, using <code>/rxcui/{id}/related.json?tty=IN</code>. Ingredients are counted across each whole pack; salt forms are not counted separately. Brand names, explicit combination names and specific products keep their matched scope. Missing ingredient information is flagged as incomplete, and those products are withheld. Drug summary records exclusion counts; NDC mapping includes ingredient API links for retained products. This check uses current product relationships, including when historical NDCs are requested.</dd>
+     <dt><a href="https://lhncbc.nlm.nih.gov/RxNav/APIs/api-RxNorm.getNDCs.html" target="_blank" rel="noopener noreferrer">Retrieve current NDCs</a></dt>
+     <dd><code>/rxcui/{id}/ndcs.json</code> returns the current NDC associations for each product.</dd>
+     <dt><a href="https://lhncbc.nlm.nih.gov/RxNav/APIs/api-RxNorm.getAllHistoricalNDCs.html" target="_blank" rel="noopener noreferrer">Add historical NDCs</a></dt>
+     <dd><code>/rxcui/{id}/allhistoricalndcs.json?history=2</code> adds earlier associations, including those inherited from remapped concepts. History dates identify RxNorm releases, not marketing periods. Older products disconnected from the matched concept may be missed.</dd>
+    </dl>
+   </section>
+  </div></details>
+ </section>
+</main>
+<footer><a href="https://yihuayue.github.io/atc-ndc-lookup/" target="_blank" rel="noopener noreferrer">ATC to NDC tool ↗</a></footer>
+<script type="module" src="app.js"></script>
+</body>
+</html>
